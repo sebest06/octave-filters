@@ -1,0 +1,102 @@
+
+% Parámetros del sistema
+A = 1;   % Matriz de transición de estado (en este caso, constante)
+H = 1;   % Matriz de observación (en este caso, constante)
+Q = 0.1; % Covarianza del proceso (ruido de estado)
+R = 1;   % Covarianza de la medición (ruido de observación)
+
+% Inicialización
+x_hat = 0;          % Estimación inicial del estado
+P = 1;              % Covarianza inicial de la estimación
+u = 0;              % Control de entrada (en este caso, no hay control)
+
+% Número de pasos de tiempo
+num_steps = 0:t_final-1;
+
+% Generar datos simulados
+observations = vector_normalizado; % Observaciones con ruido
+
+% Filtro de Kalman
+filtered_states = zeros(1, num_steps);
+for k = 1:num_steps
+    % Predicción del estado
+    x_hat_minus = A * x_hat + u;
+    P_minus = A * P * A' + Q;
+
+    % Actualización con la observación
+    K = P_minus * H' / (H * P_minus * H' + R);
+    x_hat = x_hat_minus + K * (observations(k) - H * x_hat_minus);
+    P = (1 - K * H) * P_minus;
+
+    % Guardar el estado filtrado
+    filtered_states(k) = x_hat;
+end
+
+% Graficar resultados
+figure('Position', [0, 0, 1200, 800]);  % [left, bottom, width, height]
+% plot(1:num_steps, true_state, 'g', 'LineWidth', 2, 'DisplayName', 'Estado Verdadero');
+hold on;
+plot(0:t_final/(velocidad_adc*t_final):t_final-1, observations, 'b.', 'DisplayName', 'Observaciones');
+%plot(1:num_steps, filtered_states, 'r-', 'LineWidth', 2, 'DisplayName', 'Estado Filtrado');
+legend('Location', 'southwest');
+title('Filtro de Kalman en Octave');
+xlabel('Paso de Tiempo');
+ylabel('Valor del Estado');
+
+
+
+% Generar un vector de prueba
+x = vector_normalizado;
+
+
+% Tamaño de la ventana de promedio
+n = 20;
+tamano_ventana = 10;
+
+% Aplicar el filtro de promedio por segmentos
+y_filtrada = filtroPromedio(x, n);
+y_filtrada = filtroVentanaMovil(y_filtrada, tamano_ventana);
+% y_filtrada_normalizado = interp1(1:length(y_filtrada), y_filtrada, 0:t_final/(velocidad_adc*t_final):t_final-1);
+
+% disp(y_filtrada_normalizado);
+
+% Graficar los resultados
+figure('Position', [0, 0, 1200, 800]);  % [left, bottom, width, height]
+plot(1:length(x), x, 'b', 'LineWidth', 2, 'DisplayName', 'Datos Originales');
+hold on;
+plot(1:length(x)/length(y_filtrada):length(x), y_filtrada, 'r', 'LineWidth', 2, 'DisplayName', 'Promedio por Segmentos');
+legend('Location', 'southwest');
+title('Filtro de Promedio por Segmentos en Octave');
+xlabel('Índice');
+ylabel('Valor');
+
+pause;
+
+
+
+
+%input('Presiona Enter para salir: ');
+
+
+%{
+% Parámetros de la señal
+A = 1;           % Amplitud
+f = 1;           % Frecuencia
+alpha = 1;     % Tasa de decrecimiento exponencial
+
+% Vector de tiempo
+t = linspace(0, 5, 1000);  % Generar un vector de tiempo de 0 a 5 segundos con 1000 puntos
+
+% Generar la señal senoidal que decrece exponencialmente
+x = A * sin(2 * pi * f * t) .* exp(-alpha * t);
+
+% Graficar la señal
+figure;
+plot(t, x, 'LineWidth', 2);
+title('Señal Senoidal que Decrece Exponencialmente');
+xlabel('Tiempo');
+ylabel('Amplitud');
+grid on;
+
+input('Presiona Enter para salir: ');
+%}
